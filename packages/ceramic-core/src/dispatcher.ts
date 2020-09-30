@@ -4,7 +4,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger, logToFile } from "@ceramicnetwork/ceramic-common"
 
 export enum MsgType {
   UPDATE,
@@ -98,9 +98,11 @@ export default class Dispatcher extends EventEmitter {
     }
 
     if (message.from !== this._peerId) {
-      this._log({ peer: this._peerId, event: 'received', topic: TOPIC, from: message.from, message: message.data })
+      message.data = JSON.parse(new TextDecoder('utf-8').decode(message.data))
+      // TODO: Decode seqno
+      this._log({ peer: this._peerId, event: 'received', topic: TOPIC, message })
 
-      const { typ, id, cid } = JSON.parse(message.data)
+      const { typ, id, cid } = message.data
       if (this._documents[id]) {
         switch (typ) {
           case MsgType.UPDATE:
@@ -118,7 +120,9 @@ export default class Dispatcher extends EventEmitter {
   }
 
   _log(msg: LogMessage): void {
-    this.logger.debug(JSON.stringify(msg))
+    let msgString = JSON.stringify(msg)
+    logToFile('core', msgString)
+    this.logger.debug(msgString)
   }
 
   async close(): Promise<void> {
