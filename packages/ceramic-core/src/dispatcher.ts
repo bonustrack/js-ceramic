@@ -4,7 +4,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger, logToFile } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 
 export enum MsgType {
   UPDATE,
@@ -99,7 +99,6 @@ export default class Dispatcher extends EventEmitter {
 
     if (message.from !== this._peerId) {
       message.data = JSON.parse(new TextDecoder('utf-8').decode(message.data))
-      // TODO: Decode seqno
       this._log({ peer: this._peerId, event: 'received', topic: TOPIC, message })
 
       const { typ, id, cid } = message.data
@@ -121,8 +120,6 @@ export default class Dispatcher extends EventEmitter {
 
   _log(msg: LogMessage): void {
     let msgString = JSON.stringify(msg)
-    // TODO: Remove logToFile when file plugin works
-    logToFile('core', msgString)
     this.logger.debug(msgString)
   }
 
